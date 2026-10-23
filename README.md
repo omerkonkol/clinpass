@@ -65,12 +65,21 @@ Same clinical question, two completely different encounters. That difference is 
 
 ## Tech stack
 
-- **Vite + React 18 + TypeScript**, Tailwind CSS with a custom clinical design system
-- Radix UI primitives, lucide-react icons, Recharts analytics, Framer Motion
-- Zustand for session state
-- Deterministic local engines for the core loop (intent, patient, hidden concern, scoring, replay), so the demo runs reliably without API keys
-- Live AI patient layer built with **Claude Code**, **HeyGen** (avatar) and **Higgsfield** (video), during the 3-day hackathon
-- Deployed on **Cloudflare Pages** with Pages Functions for the film endpoint and session recordings (KV)
+**Frontend:** Vite, React 18, TypeScript, Tailwind CSS with a custom clinical design system, Radix UI primitives, lucide-react, Framer Motion, Recharts, Zustand, React Router.
+
+**Live AI patient (Live Patient Room):**
+- **HeyGen LiveAvatar** streaming avatar via `@heygen/liveavatar-web-sdk`. A Cloudflare Pages Function (`/api/liveavatar/token`) exchanges the server-side HeyGen API key for a short-lived session token, so the key never reaches the browser.
+- **Fallback avatars** when the SDK is unavailable: a 3D talking head (`@met4citizen/talkinghead`) and a photo-based lip-sync avatar driven by the same speech bridge.
+- **Speech in the browser:** Web Speech API for recognition with live mic metering, SpeechSynthesis for the patient voice, and a typed fallback that always works.
+- **Optional local runtime** (localhost:8787) that upgrades the room to a real LLM patient (Ollama), Whisper speech-to-text and Kokoro text-to-speech. Everything degrades silently when it is not running.
+
+**Session recording and reports:** MediaRecorder composites the patient view, the student webcam, mixed audio and live captions into one video; `ffmpeg.wasm` for processing; reports and recordings sync to **Cloudflare KV** through Pages Functions (`/api/recordings`), with local storage as fallback.
+
+**Deterministic engines** (no API keys needed for the core loop): intent classifier, patient state machine, hidden-concern state machine, communication scoring, 100-point OSCE scoring, replay reconstruction.
+
+**Hosting:** **Cloudflare Pages** with Pages Functions (avatar token, recordings API, and a range-capable endpoint that streams the film at `/v/film.mp4`).
+
+**Hackathon tooling:** built in 3 days with **Claude Code** (AI-assisted development), **HeyGen** (avatar) and **Higgsfield** (film).
 
 Architecture details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
